@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { authorizedProfessorSchema } from "@/lib/validators";
+import { sendProfessorWelcomeEmail } from "@/lib/email";
 
 export async function GET() {
   const session = await auth();
@@ -58,6 +59,9 @@ export async function POST(request: NextRequest) {
     where: { email: parsed.data.email, role: "STUDENT" },
     data: { role: "PROFESSOR" },
   });
+
+  // Send welcome email (fire-and-forget)
+  sendProfessorWelcomeEmail(parsed.data.email);
 
   return NextResponse.json(professor, { status: 201 });
 }
