@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  PROFESSOR
+  STUDENT
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  firstName     String?
+  lastName      String?
+  image         String?
+  emailVerified DateTime?
+  role          Role      @default(STUDENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts    Account[]
+  sessions    Session[]
+  memberships StudentGroupMembership[]
+
+  evaluationsGiven    Evaluation[] @relation("Evaluator")
+  evaluationsReceived Evaluation[] @relation("Evaluatee")
+
+  authorizedProfessorsAdded AuthorizedProfessor[] @relation("AddedBy")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model AuthorizedProfessor {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  addedById String
+  createdAt DateTime @default(now())
+
+  addedBy User @relation("AddedBy", fields: [addedById], references: [id])
+}
+
+model Course {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  groups Group[]
+}
+
+model Group {
+  id         String   @id @default(cuid())
+  externalId String
+  name       String
+  courseId    String
+  createdAt  DateTime @default(now())
+
+  course      Course                   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  memberships StudentGroupMembership[]
+  evaluations Evaluation[]
+
+  @@unique([courseId, externalId])
+}
+
+model StudentGroupMembership {
+  id        String   @id @default(cuid())
+  userId    String
+  groupId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+}
+
+model Evaluation {
+  id          String   @id @default(cuid())
+  evaluatorId String
+  evaluateeId String
+  groupId     String
+  score       Int
+  comment     String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  evaluator User  @relation("Evaluator", fields: [evaluatorId], references: [id], onDelete: Cascade)
+  evaluatee User  @relation("Evaluatee", fields: [evaluateeId], references: [id], onDelete: Cascade)
+  group     Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([evaluatorId, evaluateeId, groupId])
+}

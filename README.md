@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Peer-to-Peer Evaluator
 
-## Getting Started
+A web application for peer evaluation within student groups. Students evaluate their group members, professors view results, and administrators manage courses, groups, and professor access.
 
-First, run the development server:
+## Tech Stack
+
+- **Next.js 16** (App Router) + TypeScript
+- **Supabase** (PostgreSQL) + **Prisma ORM**
+- **NextAuth.js** (Google OAuth)
+- **shadcn/ui** + **Tailwind CSS**
+- **xlsx (SheetJS)** for CSV/Excel import
+
+## Setup
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Create a Supabase project
+
+1. Go to [supabase.com](https://supabase.com) and create a new project
+2. Once created, go to **Settings → Database → Connection string**
+3. Copy the **Transaction (port 6543)** URI → this is your `DATABASE_URL`
+4. Copy the **Session (port 5432)** URI → this is your `DIRECT_URL`
+5. Replace `[YOUR-PASSWORD]` in both with your database password
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your values:
+
+- **DATABASE_URL**: Supabase pooled connection string (port 6543, with `?pgbouncer=true`)
+- **DIRECT_URL**: Supabase direct connection string (port 5432) — used by Prisma for migrations
+- **GOOGLE_CLIENT_ID** / **GOOGLE_CLIENT_SECRET**: From [Google Cloud Console](https://console.cloud.google.com/apis/credentials) — create an OAuth 2.0 Client ID, add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI
+- **NEXTAUTH_SECRET**: Generate with `openssl rand -base64 32`
+- **ADMIN_EMAIL**: The Google email that will have admin access
+
+### 4. Set up the database
+
+```bash
+npx prisma migrate dev --name init
+npx prisma db seed
+```
+
+### 5. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Roles
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Role | How assigned | What they can do |
+|------|-------------|------------------|
+| **Admin** | Email matches `ADMIN_EMAIL` env var | Manage professors, courses, import data |
+| **Professor** | Email pre-approved by admin | View courses, groups, evaluation results |
+| **Student** | Everyone else | See group, evaluate peers |
 
-## Learn More
+## Data Import
 
-To learn more about Next.js, take a look at the following resources:
+The admin can import data via CSV/Excel files:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Groups file** — columns: `Group Code`, `Title` (+ any others, which are ignored)
+2. **Students file** — columns: `Group Code`, `User Name` (email), `First Name`, `Last Name`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Import groups first, then students. Re-importing is safe (upserts).
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/
+│   ├── api/          # API routes (auth, courses, groups, evaluations, import)
+│   ├── auth/         # Sign-in page
+│   └── dashboard/    # Role-based dashboards (admin, professor, student)
+├── components/       # Shared UI components
+├── lib/              # Auth, Prisma, validators, Excel parser
+├── hooks/            # React hooks
+└── types/            # TypeScript type augmentations
+```
