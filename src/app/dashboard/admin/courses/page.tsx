@@ -13,7 +13,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, BookOpen, Users } from "lucide-react";
+import { Plus, BookOpen, Users, Download } from "lucide-react";
 import Link from "next/link";
 
 interface Course {
@@ -139,6 +139,12 @@ export default function AdminCoursesPage() {
                             Manage Groups
                           </Button>
                         </Link>
+                        <a href={`/api/courses/${course.id}/export`}>
+                          <Button variant="ghost" size="sm" className="gap-1">
+                            <Download className="h-3.5 w-3.5" />
+                            Export
+                          </Button>
+                        </a>
                         <Link href={`/dashboard/professor/courses/${course.id}`}>
                           <Button variant="ghost" size="sm">
                             View

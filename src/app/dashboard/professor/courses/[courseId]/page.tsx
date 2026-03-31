@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import Link from "next/link";
 
 interface GroupStats {
@@ -63,12 +63,18 @@ export default function ProfessorCourseDetailPage() {
             Back
           </Button>
         </Link>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold">{course.name}</h1>
           <p className="text-muted-foreground">
             {course._count.groups} groups &middot; {course.studentCount} students
           </p>
         </div>
+        <a href={`/api/courses/${courseId}/export`}>
+          <Button variant="outline" size="sm" className="gap-1">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+        </a>
       </div>
 
       <Card>
