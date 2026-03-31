@@ -7,7 +7,7 @@ const APP_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 export async function sendProfessorWelcomeEmail(to: string) {
   try {
     await resend.emails.send({
-      from: "Peer Evaluator <onboarding@resend.dev>",
+      from: "Peer Evaluator <noreply@mide360.com>",
       to,
       subject: "You've been added as a Professor — Peer Evaluator",
       html: `
